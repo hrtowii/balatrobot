@@ -285,25 +285,56 @@ function Middleware.c_shop()
 
     local _cards_to_buy = { }
     for i = 1, #G.shop_jokers.cards do
-        _cards_to_buy[i] = G.shop_jokers.cards[i].cost <= G.GAME.dollars and G.shop_jokers.cards[i] or nil
+        -- Check if card exists and cost is a number
+        if G.shop_jokers.cards[i] and type(G.shop_jokers.cards[i].cost) == "number" and type(G.GAME.dollars) == "number" then
+            _cards_to_buy[i] = G.shop_jokers.cards[i].cost <= G.GAME.dollars and G.shop_jokers.cards[i] or nil
+        else
+            print("[WARNING] Invalid shop joker card at index " .. i .. ": cost may not be a number")
+        end
     end
 
     local _vouchers_to_buy = { }
     for i = 1, #G.shop_vouchers.cards do
-        _vouchers_to_buy[i] = G.shop_vouchers.cards[i].cost <= G.GAME.dollars and G.shop_vouchers.cards[i] or nil
+        -- Check if voucher exists and cost is a number
+        if G.shop_vouchers.cards[i] and type(G.shop_vouchers.cards[i].cost) == "number" and type(G.GAME.dollars) == "number" then
+            _vouchers_to_buy[i] = G.shop_vouchers.cards[i].cost <= G.GAME.dollars and G.shop_vouchers.cards[i] or nil
+        else
+            print("[WARNING] Invalid shop voucher at index " .. i .. ": cost may not be a number")
+        end
     end
 
     local _boosters_to_buy = { }
     for i = 1, #G.shop_booster.cards do
-        _boosters_to_buy[i] = G.shop_booster.cards[i].cost <= G.GAME.dollars and G.shop_booster.cards[i] or nil
+        -- Check if booster exists and cost is a number
+        if G.shop_booster.cards[i] and type(G.shop_booster.cards[i].cost) == "number" and type(G.GAME.dollars) == "number" then
+            _boosters_to_buy[i] = G.shop_booster.cards[i].cost <= G.GAME.dollars and G.shop_booster.cards[i] or nil
+        else
+            print("[WARNING] Invalid shop booster at index " .. i .. ": cost may not be a number")
+        end
     end
 
     local _choices = { }
     _choices[Bot.ACTIONS.END_SHOP] = _b_round_end_shop
     _choices[Bot.ACTIONS.REROLL_SHOP] = _b_reroll_shop
-    _choices[Bot.ACTIONS.BUY_CARD] = #_cards_to_buy > 0 and _cards_to_buy or nil
-    _choices[Bot.ACTIONS.BUY_VOUCHER] = #_vouchers_to_buy > 0 and _vouchers_to_buy or nil
-    _choices[Bot.ACTIONS.BUY_BOOSTER] = #_boosters_to_buy > 0 and _boosters_to_buy or nil
+    
+    -- Safely check if tables have items before assigning
+    if type(_cards_to_buy) == "table" and next(_cards_to_buy) then
+        _choices[Bot.ACTIONS.BUY_CARD] = _cards_to_buy
+    else
+        _choices[Bot.ACTIONS.BUY_CARD] = nil
+    end
+    
+    if type(_vouchers_to_buy) == "table" and next(_vouchers_to_buy) then
+        _choices[Bot.ACTIONS.BUY_VOUCHER] = _vouchers_to_buy
+    else
+        _choices[Bot.ACTIONS.BUY_VOUCHER] = nil
+    end
+    
+    if type(_boosters_to_buy) == "table" and next(_boosters_to_buy) then
+        _choices[Bot.ACTIONS.BUY_BOOSTER] = _boosters_to_buy
+    else
+        _choices[Bot.ACTIONS.BUY_BOOSTER] = nil
+    end
     
     firewhenready(function()
         local _action, _card = Bot.select_shop_action(_choices)
@@ -321,15 +352,28 @@ function Middleware.c_shop()
         elseif _action == Bot.ACTIONS.REROLL_SHOP then
             pushbutton(Middleware.BUTTONS.REROLL)
         elseif _action == Bot.ACTIONS.BUY_CARD then
-            clickcard(_choices[Bot.ACTIONS.BUY_CARD][_card[1]])
-            usecard(_choices[Bot.ACTIONS.BUY_CARD][_card[1]])
+            if _choices[Bot.ACTIONS.BUY_CARD] and type(_card) == "table" and _card[1] and _choices[Bot.ACTIONS.BUY_CARD][_card[1]] then
+                clickcard(_choices[Bot.ACTIONS.BUY_CARD][_card[1]])
+                usecard(_choices[Bot.ACTIONS.BUY_CARD][_card[1]])
+            else
+                print("[ERROR] Tried to buy an invalid card")
+            end
         elseif _action == Bot.ACTIONS.BUY_VOUCHER then
-            clickcard(_choices[Bot.ACTIONS.BUY_VOUCHER][_card[1]])
-            usecard(_choices[Bot.ACTIONS.BUY_VOUCHER][_card[1]])
+            if _choices[Bot.ACTIONS.BUY_VOUCHER] and type(_card) == "table" and _card[1] and _choices[Bot.ACTIONS.BUY_VOUCHER][_card[1]] then
+                clickcard(_choices[Bot.ACTIONS.BUY_VOUCHER][_card[1]])
+                usecard(_choices[Bot.ACTIONS.BUY_VOUCHER][_card[1]])
+            else
+                print("[ERROR] Tried to buy an invalid voucher")
+            end
         elseif _action == Bot.ACTIONS.BUY_BOOSTER then
-            _done_shopping = true
-            clickcard(_choices[Bot.ACTIONS.BUY_BOOSTER][_card[1]])
-            usecard(_choices[Bot.ACTIONS.BUY_BOOSTER][_card[1]])
+            if _choices[Bot.ACTIONS.BUY_BOOSTER] and type(_card) == "table" and _card[1] and _choices[Bot.ACTIONS.BUY_BOOSTER][_card[1]] then
+                _done_shopping = true
+                clickcard(_choices[Bot.ACTIONS.BUY_BOOSTER][_card[1]])
+                usecard(_choices[Bot.ACTIONS.BUY_BOOSTER][_card[1]])
+            else
+                print("[ERROR] Tried to buy an invalid booster")
+                _done_shopping = true
+            end
         end
     
         if not _done_shopping then
@@ -478,45 +522,57 @@ function Middleware.c_sell_jokers()
 end
 
 function Middleware.c_start_run()
-
-    firewhenready(function()
-        local _action, _stake, _deck, _seed, _challenge = Bot.start_run()
-        _stake = _stake ~= nil and tonumber(_stake[1]) or 1
-        _deck = _deck ~= nil and _deck[1] or "Red Deck"
-        _seed = _seed ~= nil and _seed[1] or nil
-        _challenge = _challenge ~= nil and _challenge[1] or nil
-        if _action then
-            return true, _action, _stake, _deck, _seed, _challenge
-        else
-            return false
-        end
-    end,
-
-    function(_action, _stake, _deck, _seed, _challenge)
-        queueaction(function()
-            local _play_button = G.MAIN_MENU_UI:get_UIE_by_ID('main_menu_play')
-            G.FUNCS[_play_button.config.button]({
-                config = { }
-            })
-            G.FUNCS.exit_overlay_menu()
-        end)
-
-        queueaction(function()
-            for k, v in pairs(G.P_CENTER_POOLS.Back) do
-                if v.name == _deck then
-                    G.GAME.selected_back:change_to(v)
-                    G.GAME.viewed_back:change_to(v)
+    firewhenready(
+        function()
+            -- Must wait until API actually sent us parameters
+            if BalatrobotAPI.start_run_params then
+                print("starting run!!!!! meowww")
+                return true, 
+                       Bot.ACTIONS.START_RUN,
+                       BalatrobotAPI.start_run_params.stake,
+                       BalatrobotAPI.start_run_params.deck,
+                       BalatrobotAPI.start_run_params.seed,
+                       BalatrobotAPI.start_run_params.challenge
+            else
+                return false
+            end
+        end,
+        function(_action, _stake, _deck, _seed, _challenge)
+            -- Defensive defaults
+            local stake = tonumber(_stake and _stake[1]) or 1
+            local deck_name = (_deck and _deck[1]) or "Red Deck"
+            local seed = (_seed and _seed[1]) or nil
+            local challenge = (_challenge and _challenge[1]) or ''
+            queueaction(function()
+                local _play_button = G.MAIN_MENU_UI:get_UIE_by_ID('main_menu_play')
+                G.FUNCS[_play_button.config.button]({
+                    config = { }
+                })
+                G.FUNCS.exit_overlay_menu()
+            end)
+            queueaction(function()
+                -- Pick deck
+                for k, v in pairs(G.P_CENTER_POOLS.Back) do
+                    if v.name == deck_name then
+                        G.GAME.selected_back:change_to(v)
+                        G.GAME.viewed_back:change_to(v)
+                    end
                 end
-            end
-
-            for i = 1, #G.CHALLENGES do
-                if G.CHALLENGES[i].name == _challenge then
-                    _challenge = G.CHALLENGES[i]
-                end                    
-            end
-            G.FUNCS.start_run(nil, {stake = _stake, seed = _seed, challenge = _challenge})
-        end, 1.0)
-    end)
+                -- Pick challenge object if applicable
+                local chal_obj = nil
+                for i = 1, #G.CHALLENGES do
+                    if G.CHALLENGES[i].name == challenge then
+                        chal_obj = G.CHALLENGES[i]
+                    end
+                end
+                G.FUNCS.start_run(nil, {stake=stake,
+                                        seed=seed,
+                                        challenge=chal_obj})
+            end,1.0)
+            -- Consume start_run_params after use
+            BalatrobotAPI.start_run_params = nil
+        end
+    )
 end
 
 

@@ -266,21 +266,7 @@ Bot.ACTIONPARAMS[Bot.ACTIONS.START_RUN] = {
 
 -- CHANGE ME
 Bot.SETTINGS = {
-    stake = 1,
-    deck = "Plasma Deck",
-
-    -- Keep these nil for random seed
-    seed = "1OGB5WO",
-    challenge = '',
-
-    -- Time between actions the bot takes (pushing buttons, clicking cards, etc.)
-    -- Minimum is 1 frame per action
     action_delay = 0,
-
-    -- Replay actions from file?
-    replay = false,
-
-    -- Receive commands from the API?
     api = true,
 }
 
@@ -402,9 +388,9 @@ function Bot.rearrange_hand()
     --return Bot.ACTIONS.REARRANGE_HAND, { 2, 1, 3, 4, 5, 6, 7, 8 }
 end
 
-function Bot.start_run()
-    return Bot.ACTIONS.START_RUN, { Bot.SETTINGS.stake }, { Bot.SETTINGS.deck }, { Bot.SETTINGS.seed }, { Bot.SETTINGS.challenge }
-end
+-- function Bot.start_run()
+--     return Bot.ACTIONS.START_RUN, { Bot.SETTINGS.stake }, { Bot.SETTINGS.deck }, { Bot.SETTINGS.seed }, { Bot.SETTINGS.challenge }
+-- end
 
 
 return Bot

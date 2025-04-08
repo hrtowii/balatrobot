@@ -6,7 +6,7 @@
 
 function SMODS.INIT.BALATROBOT()
 	mw = SMODS.findModByID("Balatrobot-v0.3")
-
+	B_NN = {}
 	-- Load the mod configuration
 	assert(load(NFS.read(mw.path .. "config.lua")))()
 	if not BALATRO_BOT_CONFIG.enabled then
@@ -21,12 +21,13 @@ function SMODS.INIT.BALATROBOT()
 	assert(load(NFS.read(mw.path .. "lib/json.lua")))()
 
 	-- Mod specific files
+	assert(load(NFS.read(mw.path .. "src/game_state_hooks.lua")))()
+	assert(load(NFS.read(mw.path .. "src/get_game_state.lua")))()
 	assert(load(NFS.read(mw.path .. "src/utils.lua")))()
 	assert(load(NFS.read(mw.path .. "src/bot.lua")))()
 	assert(load(NFS.read(mw.path .. "src/middleware.lua")))()
 	assert(load(NFS.read(mw.path .. "src/botlogger.lua")))()
 	assert(load(NFS.read(mw.path .. "src/api.lua")))()
-
 	sendDebugMessage("Balatrobot v0.3 loaded")
 
 	Middleware.hookbalatro()

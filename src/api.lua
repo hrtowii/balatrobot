@@ -8,7 +8,7 @@ BalatrobotAPI.socket = nil
 
 BalatrobotAPI.waitingFor = nil
 BalatrobotAPI.waitingForAction = true
-
+BalatrobotAPI.start_run_params = nil
 function BalatrobotAPI.notifyapiclient()
     -- TODO Generate gamestate json object
     local _gamestate = Utils.getGamestate()
@@ -42,16 +42,18 @@ function BalatrobotAPI.update(dt)
     if not BalatrobotAPI.socket then
         sendDebugMessage('new socket')
         BalatrobotAPI.socket = socket.udp()
-        BalatrobotAPI.socket:settimeout(0)
-        local port = arg[1] or BALATRO_BOT_CONFIG.port
-        BalatrobotAPI.socket:setsockname('127.0.0.1', tonumber(port))
+        BalatrobotAPI.socket:settimeout(10)
+        local port = BALATRO_BOT_CONFIG.port
+        BalatrobotAPI.socket:setsockname('127.0.0.1', 12348)
     end
 
     data, msg_or_ip, port_or_nil = BalatrobotAPI.socket:receivefrom()
 	if data then
+        print("data meow meow")
         if data == 'HELLO\n' or data == 'HELLO' then
             BalatrobotAPI.notifyapiclient()
         else
+            print(data)
             local _action = Utils.parseaction(data)
             local _err = Utils.validateAction(_action)
 
@@ -62,8 +64,20 @@ function BalatrobotAPI.update(dt)
             elseif _err == Utils.ERROR.INVALIDACTION then
                 BalatrobotAPI.respond("Error: Action invalid for action " .. _action[1])
             else
+                -- Save start_run params
+                if _action[1] == Bot.ACTIONS.START_RUN then
+                    -- args: stake, deck, seed, challenge
+                    BalatrobotAPI.start_run_params = {
+                        stake = _action[2],
+                        deck = _action[3],
+                        seed = _action[4],
+                        challenge = _action[5]
+                    }
+                    BalatrobotAPI.respond("start_run parameters received")
+                else
+                    BalatrobotAPI.queueaction(_action)
+                end
                 BalatrobotAPI.waitingForAction = false
-                BalatrobotAPI.queueaction(_action)
             end
         end
 
@@ -73,7 +87,7 @@ function BalatrobotAPI.update(dt)
 	
     -- No idea if this is necessary
     -- Without this being commented out, FPS capped out at ~80 for me
-	-- socket.sleep(0.01)
+	socket.sleep(0.01)
 end
 
 function BalatrobotAPI.init()
@@ -90,7 +104,7 @@ function BalatrobotAPI.init()
 
     -- Disable FPS cap
     if BALATRO_BOT_CONFIG.uncap_fps then
-        G.FPS_CAP = 999999.0
+        G.FPS_CAP = 10000.0
     end
 
     -- Makes things move instantly instead of sliding

@@ -45,10 +45,10 @@ function Utils.getJokersData()
     return _jokers
 end
 
-function Utils.getConsumablesData()
+function Utils.getConsumeablesData()
     local _consumables = { }
 
-    if G and G.consumables and G.consumables.cards then
+    if G and G.consumeables and G.consumeables.cards then
         for i = 1, #G.consumeables.cards do
             local _card = Utils.getCardData(G.consumeables.cards[i])
             _consumables[i] = _card
@@ -151,19 +151,19 @@ function Utils.getGamestate()
     -- TODO
     local _gamestate = { }
 
-    _gamestate = Utils.getGameData()
+    -- _gamestate = Utils.getGameData()
     
-    _gamestate.deckback = Utils.getBackData()
-    _gamestate.deck = Utils.getDeckData() -- Ensure this is not ordered
-    _gamestate.hand = Utils.getHandData()
-    _gamestate.jokers = Utils.getJokersData()
-    _gamestate.consumables = Utils.getConsumablesData()
-    _gamestate.ante = Utils.getAnteData()
-    _gamestate.shop = Utils.getShopData() -- Empty if not in shop phase
-    _gamestate.handscores = Utils.getHandScoreData()
-    _gamestate.tags = Utils.getTagsData()
-    _gamestate.current_round = Utils.getRoundData()
-
+    -- _gamestate.deckback = Utils.getBackData()
+    -- _gamestate.deck = Utils.getDeckData() -- Ensure this is not ordered
+    -- _gamestate.hand = Utils.getHandData()
+    -- _gamestate.jokers = Utils.getJokersData()
+    -- _gamestate.consumables = Utils.getConsumablesData()
+    -- _gamestate.ante = Utils.getAnteData()
+    -- _gamestate.shop = Utils.getShopData() -- Empty if not in shop phase
+    -- _gamestate.handscores = Utils.getHandScoreData()
+    -- _gamestate.tags = Utils.getTagsData()
+    -- _gamestate.current_round = Utils.getRoundData()
+    _gamestate = B_NN:get_current_game_state()
     return _gamestate
 end
 
