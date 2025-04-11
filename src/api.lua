@@ -97,9 +97,9 @@ function BalatrobotAPI.init()
     -- Speeds up the game execution
     -- Values higher than this seem to cause instability
     if BALATRO_BOT_CONFIG.dt then
-        love.update = Hook.addbreakpoint(love.update, function(dt)
-            return BALATRO_BOT_CONFIG.dt
-        end)
+        -- love.update = Hook.addbreakpoint(love.update, function(dt)
+        --     return BALATRO_BOT_CONFIG.dt
+        -- end)
     end
 
     -- Disable FPS cap
